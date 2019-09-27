@@ -34,24 +34,15 @@ There are several options that the code can be run with.
 
 ##### --show
 
-```
-# This option displays the fitted map overlaid on the ground truth image at the end
---show 
-```
+This option displays the fitted map overlaid on the ground truth image at the end.
 
 ##### --same_scale
 
-```
-# This option signals that both maps have the same scale. This reduces search space and time needed to run the code
---same_scale
-```
+This option signals that both maps have the same scale. This reduces search space and time needed to run the code.
 
 ##### --crop_gt
 
-```
-# This options crops the ground truth image so there is only a small padding around useful information in the image.
---crop_gt
-```
+This options crops the ground truth image so there is only a small padding around useful information in the image.
 
 There is an implicit assumption in the code that the ground truth image is cropped. This assumption was made to reduce the search space and decrease running time. It is expressed as an if condition in fit_map.py.
 ```
@@ -66,10 +57,7 @@ You can use this option to crop your ground truth. It might fail if you are comp
 
 ##### --crop_target
 
-```
-# This option crops the floorplan so that there is not too much irrelevant space around the informative part of the image.
---crop_target
-```
+ This option crops the floorplan so that there is not too much irrelevant space around the informative part of the image.
 
 ### Data
 
@@ -77,12 +65,12 @@ data/ folder contains the ground truth .json file, the image of the ground truth
 
 #### Ground truth corners file format
 
-Ground truth file is a file that contains a full description of the area that is being fitted. The area is described as a set of polylines, each polyline described by a sequence of points that connect to each other consecutively. If the polyline describes a loop in the map, then the first and the last point of the polyline are the same. Here is an example of the contents of such a file:
+Ground truth file is a file that contains a full description of the area that is being fitted. The area is described as a set of polylines, each polyline described by a sequence of points that connect to each other consecutively. If the polyline describes a loop in the map, then the first and the last point of the polyline are the same. Here is an illustration of what a file like that could look like:
 
 ```
 {"polylines": 
-{"1": [[68.119, 32.68600000000001], [70.659, 32.68600000000001], [71.29400000000001, 31.289], [83.486, 31.289], [83.486, 35.35300000000001], [94.662, 35.35300000000001], [94.662, 33.194], [107.108, 33.194], [107.108, 32.94], [108.759, 32.94], [108.759, 51.101], [85.391, 51.101], [85.391, 52.625], [68.119, 52.625], [68.119, 32.68600000000001]], 
-"0": [[48.815000000000005, 38.02], [33.82900000000001, 38.02], [33.82900000000001, 39.798], [18.716, 39.798], [18.716, 38.02], [5.0, 38.02], [5.0, 23.796000000000003], [6.7780000000000005, 23.796000000000003], [6.7780000000000005, 5.0], [26.971000000000004, 5.0], [26.971000000000004, 17.954], [29.003, 17.954], [29.003, 16.938000000000002], [47.79900000000001, 16.938000000000002], [47.79900000000001, 17.954], [49.831, 17.954], [49.831, 16.938000000000002], [68.62700000000001, 16.938000000000002], [68.62700000000001, 17.954], [71.167, 17.954], [71.167, 15.922], [107.48900000000002, 15.922], [107.48900000000002, 11.604000000000001], [120.697, 11.604000000000001], [120.697, 15.033000000000001], [139.366, 15.033000000000001], [139.366, 47.164], [140.89000000000001, 47.164], [140.89000000000001, 123.11], [110.41, 123.11], [110.41, 105.83800000000001], [71.29400000000001, 105.83800000000001], [71.29400000000001, 123.11], [55.165000000000006, 123.11], [55.165000000000006, 103.80600000000001], [48.815000000000005, 103.80600000000001], [48.815000000000005, 38.02]]}}
+{"0": [[5, 5,], [5, 600], [700, 600], [700, 5], [5, 5]], 
+"1": [[700, 600], [700, 1200], [200, 1200], [200, 600]] }
 ```
 
 ### Examples
