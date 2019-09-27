@@ -1,9 +1,9 @@
 """
 
 Usage:
-	fit_map.py from_gt_img_and_corners_file <gt_corners> <gt_img> <floorplan> [--same_scale] [--crop_gt] [--crop_target] [--show] [--debug] 
-	fit_map.py from_gt_img <gt_img> <floorplan> [--same_scale] [--crop_gt] [--crop_target] [--show] [--debug]
-	fit_map.py from_gt_corners <gt_corners> <floorplan> [--same_scale] [--crop_gt] [--crop_target] [--show] [--debug]
+	fit_map.py from_gt_img_and_corners_file <gt_corners> <gt_img> <floorplan> [--same_scale] [--crop_gt] [--crop_target] [--show] 
+	fit_map.py from_gt_img <gt_img> <floorplan> [--same_scale] [--crop_gt] [--crop_target] [--show] 
+	fit_map.py from_gt_corners <gt_corners> <floorplan> [--same_scale] [--crop_gt] [--crop_target] [--show] 
 	fit_map.py -h | --help
 
 Options:
@@ -15,6 +15,7 @@ import json
 import time
 import math
 import numpy as np
+import logging
 from tqdm import tqdm
 from os import listdir
 from os.path import isfile, join
@@ -66,7 +67,7 @@ def gt_img_from_corners(gt_corners_file):
 	return gt_img
 
 
-def fit_map_using_corners(gt_corners, gt_img, floorplan, same_scale=False, delta=MIN_SEGMENT_LENGTH, show=False, debug=False):
+def fit_map_using_corners(gt_corners, gt_img, floorplan, same_scale=False, delta=MIN_SEGMENT_LENGTH, show=False):
 	if len(gt_img.shape) > 2:
 		gt_gray = cv2.cvtColor(gt_img, cv2.COLOR_BGR2GRAY)
 	else:
@@ -97,7 +98,7 @@ def fit_map_using_corners(gt_corners, gt_img, floorplan, same_scale=False, delta
 	boundary_indices_h = np.c_[ boundary_indices, np.ones(len(boundary_indices)) ]
 	
 	corners = detect_corners.detect_corners(floorplan)
-	print('Number of detected corners in the floorplan: ', len(corners))
+	logging.info('Floorplan corners were detected.')
 
 	# preselect line segments above certain length for use in the fitting process
 	num_corners = len(corners)
@@ -115,9 +116,9 @@ def fit_map_using_corners(gt_corners, gt_img, floorplan, same_scale=False, delta
 	fitted_indices_0 = None
 	fitted_indices_1 = None
 
-	if debug:
-		print('Number of corner pairs: ', len(corner_pairs))
+	logging.debug('Number of corner pairs: ', len(corner_pairs))
 
+	logging.info('Starting fitting procedure...')
 	# In this loop we pick any two corners from the ground truth and try to match them to two corners
 	# in the floorplan; 
 	# We calculate the transformation that transforms the corners from the floorplan into the points in the 
@@ -198,8 +199,9 @@ def fit_map_using_corners(gt_corners, gt_img, floorplan, same_scale=False, delta
 
 					min_fitness_score = fitness_score
 
-	if debug:
-		print('min_fitness_score = ', min_fitness_score)
+	logging.debug('min_fitness_score = ', min_fitness_score)
+
+	logging.info('Fitting done')
 
 	if fitted_indices_0 is not None:
 		fitted_floorplan = np.ones(gt_gray_padded.shape)*255
@@ -210,9 +212,8 @@ def fit_map_using_corners(gt_corners, gt_img, floorplan, same_scale=False, delta
 
 		gt_fitness_score, max_dist_gt = evaluate_reverse_fit(fitted_indices_0, fitted_indices_1, gt_gray_padded)
 
-		if debug:
-			print('ground truth fitness score: ', gt_fitness_score)
-			print('max_dist_gt = ', max_dist_gt)
+		logging.debug('ground truth fitness score: ', gt_fitness_score)
+		logging.debug('max_dist_gt = ', max_dist_gt)
 
 		if show:
 			# this shows the transformed floorplan overlaid on the ground truth
@@ -220,12 +221,15 @@ def fit_map_using_corners(gt_corners, gt_img, floorplan, same_scale=False, delta
 			for i in range(len(fitted_indices_0)):
 				cv2.circle(fitted_map_img, (fitted_indices_1[i], fitted_indices_0[i]), 1, (125, 125, 125), -1)
 			cv2.imshow('fitted map image', fitted_map_img)
+			cv2.imwrite('fitted-map-overlaid-bad.png', fitted_map_img)
 			cv2.waitKey(0)
 
 		metrics = {'fitness_score': min_fitness_score, 'gt_fitness_score': gt_fitness_score, 'max_dist_gt': max_dist_gt}
 		fitted_boundary_indices = [fitted_indices_0, fitted_indices_1]
+		logging.info('Fitted map was generated and is being returned.')
 		return metrics, fitted_floorplan, fitted_boundary_indices
 
+	logging.info('Fitting failed.')
 
 def evaluate_fit(gt_distance_map, indices0, indices1):
 	try:
@@ -291,14 +295,10 @@ if __name__ == "__main__":
 		if len(gt_img.shape) > 2:
 			gt_img = cv2.cvtColor(gt_img, cv2.COLOR_BGR2GRAY)
 		show_corners = False
-		gt_corners = detect_corners.detect_corners(gt_img, show=arguments['--debug'])
+		gt_corners = detect_corners.detect_corners(gt_img)
 	elif arguments['from_gt_corners']:
 		gt_corners = load_ground_truth_corners(arguments['<gt_corners>'])
 		gt_img = gt_img_from_corners(arguments['<gt_corners>'])
-
-		if arguments['--debug']:
-			cv2.imshow('gt_img', gt_img)
-			cv2.waitKey(0)
 	else:
 		exit("{0} is not a command. See 'options.py --help'.".format(arguments['<command>']))
 
@@ -309,16 +309,16 @@ if __name__ == "__main__":
 	show=False
 	if arguments['--show']:
 		show = True
-	debug=False
-	if arguments['--debug']:
-		debug = True
+
+	logging.basicConfig(level=logging.INFO, format='%(process)d-%(levelname)s-%(message)s')
 
 	floorplan = cv2.imread(floorplan)
 	if arguments['--crop_target']:
 		floorplan = crop_floorplan.crop_floorplan(floorplan)
 	if arguments['--crop_gt']:
 		gt_img = crop_floorplan.crop_floorplan(gt_img)
-	fit_map_using_corners(gt_corners=gt_corners, gt_img=gt_img, floorplan=floorplan, same_scale=same_scale, show=show, debug=debug)
+	metrics, fitted_floorplan, fitted_boundary_indices = fit_map_using_corners(gt_corners=gt_corners, gt_img=gt_img, floorplan=floorplan, same_scale=same_scale, show=show)
+	print(metrics)
 
 
 			
