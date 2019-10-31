@@ -77,7 +77,7 @@ Ground truth json file is a file that contains a full description of the area th
 
 Here are some successful examples of fitting.
 
-[[figures/figure-good-floorplan.png]]
-[[figures/figure-bad-floorplan.png]]
+![figure-good-floorplan](https://user-images.githubusercontent.com/51337969/67908855-54269380-fb3a-11e9-94d6-11fc8b5273ab.png)
+![figure-bad-floorplan](https://user-images.githubusercontent.com/51337969/67908853-51c43980-fb3a-11e9-9cd2-afa7cf3052d8.png)
 
 As we can see in both cases, the floorplan was fitted closely (as much as possible) to the ground truth. The second figure is a bit more interesting because the floorplan itself is quite bad, deformed and incomplete. However, the algorithm succeeds in fitting it to the ground truth in a reasonable fashion.
